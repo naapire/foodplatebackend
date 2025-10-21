@@ -41,23 +41,8 @@ export class RestaurantsService {
   /**
    * List restaurants with pagination and optional search
    */
-  async findAll(query?: { page?: number; limit?: number; q?: string }): Promise<{ data: Restaurant[]; total: number; page: number; limit: number }> {
-    const page = query?.page && query.page > 0 ? Math.max(1, Math.floor(query.page)) : 1;
-    const limit = query?.limit && query.limit > 0 ? Math.min(100, Math.floor(query.limit)) : 20;
-    const skip = (page - 1) * limit;
-
-    const qb = this.restaurantRepo.createQueryBuilder('restaurant')
-      .leftJoinAndSelect('restaurant.menus', 'menus')
-      .leftJoinAndSelect('restaurant.menuItems', 'menuItems');
-
-    if (query?.q) {
-      qb.andWhere('(restaurant.restaurant_name LIKE :q OR restaurant.address LIKE :q)', { q: `%${query.q}%` });
-    }
-
-    qb.orderBy('restaurant.createdAt', 'DESC');
-
-    const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
-    return { data, total, page, limit };
+   async findAll() {
+    return this.restaurantRepo.find();
   }
 
   async findOne(id: string): Promise<Restaurant> {

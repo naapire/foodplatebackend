@@ -30,10 +30,10 @@ export class RestaurantsController {
   constructor(private readonly restaurantsService: RestaurantsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create restaurant (multipart: image optional)' })
+  @ApiOperation({ summary: 'Create restaurant' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'Create restaurant payload (image optional)',
+    description: 'Create restaurants',
     schema: {
       type: 'object',
       properties: {
@@ -51,17 +51,10 @@ export class RestaurantsController {
     return this.restaurantsService.create(dto, buffer);
   }
 
+  
   @Get()
-  @ApiOperation({ summary: 'List restaurants' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 20 })
-  @ApiQuery({ name: 'q', required: false, example: 'Mama' })
-  async findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
-    @Query('q') q?: string,
-  ) {
-    return this.restaurantsService.findAll({ page, limit, q });
+  findAll() {
+    return this.restaurantsService.findAll();
   }
 
   @Get(':id')
