@@ -13,8 +13,8 @@ export class Menu {
   @Column({ nullable: true })
   promotionDetails: string;
 
-  @Column({ default: true })
-  is_available: boolean;
+  @Column({ type: 'enum', enum: ['active', 'inactive'], default: 'active' })
+  is_available: 'active' | 'inactive';
 
   @Column({ nullable: true })
   image_url: string;
@@ -24,4 +24,10 @@ export class Menu {
 
   @OneToMany(() => MenuItem, mi => mi.menu)
   items: MenuItem[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

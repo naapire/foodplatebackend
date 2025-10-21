@@ -5,6 +5,7 @@ import { Menu } from '../entities/menu.entity';
 import { Restaurant } from '../entities/restaurant.entity';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class MenuService {
@@ -13,26 +14,30 @@ export class MenuService {
     private readonly menuRepo: Repository<Menu>,
     @InjectRepository(Restaurant)
     private readonly restaurantRepo: Repository<Restaurant>,
+       private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async create(dto: CreateMenuDto): Promise<Menu> {
+ async create(dto: CreateMenuDto, imageBuffer?: Buffer): Promise<Menu> {
     const restaurant = await this.restaurantRepo.findOne({ where: { id: dto.restaurantId } });
     if (!restaurant) throw new BadRequestException('Restaurant not found');
 
-    // Build a payload typed as DeepPartial<Menu> so TS picks the single-entity overload
+    let image_url = dto.image_url;
+
+    if (imageBuffer) {
+      const uploadRes = await this.cloudinaryService.upload(imageBuffer, { folder: 'menus' });
+      image_url = uploadRes.secure_url;
+    }
+
     const payload: DeepPartial<Menu> = {
       name: dto.name,
       promotionDetails: dto.promotionDetails,
-      is_available: typeof dto.is_available === 'undefined' ? true : dto.is_available,
-      image_url: dto.image_url,
+      is_available: dto.is_available ?? 'active',
+      image_url,
       restaurant,
     };
 
-    // create() now returns Menu (not Menu[]) because payload is clearly a DeepPartial<Menu>
     const menu = this.menuRepo.create(payload);
-
-    // save(menu) will return Menu
-    return await this.menuRepo.save(menu);
+    return this.menuRepo.save(menu);
   }
 
   async findAll() {

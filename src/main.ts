@@ -3,9 +3,13 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+   
   const config = new DocumentBuilder()
     .setTitle('Foodplace API')
     .setDescription('API documentation for Foodplace backend')
