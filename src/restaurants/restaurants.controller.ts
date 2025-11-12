@@ -53,9 +53,23 @@ export class RestaurantsController {
 
   
   @Get()
-  findAll() {
+  getrestaurants() {
     return this.restaurantsService.findAll();
   }
+
+  @Get('cats')
+  getCats() {
+    return ['Leopard', 'Lion', 'Cheetah'];
+  }
+
+  @Get(':id/menus')
+  @ApiOperation({ summary: 'Get restaurant menus' })
+  @ApiParam({ name: 'id', required: true, description: 'Restaurant UUID' })
+  async findMenu(@Param('id') id: string) {
+    const restaurant = await this.restaurantsService.findOne(id);
+    return restaurant.menus;
+  }
+
 
   @Get(':id')
   @ApiOperation({ summary: 'Get single restaurant' })

@@ -93,4 +93,5 @@ export class RestaurantsService {
     if (result.affected === 0) throw new NotFoundException('Restaurant not found');
     return { deleted: true };
   }
+  
 }
