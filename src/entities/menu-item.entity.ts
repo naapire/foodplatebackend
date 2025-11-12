@@ -22,6 +22,9 @@ export class MenuItem {
   @Column({ nullable: true })
   image: string;
 
+  @Column({ type: 'enum', enum: ['active', 'inactive'], default: 'active' })
+  is_available: 'active' | 'inactive';
+
   @ManyToOne(() => Menu, m => m.items)
   menu: Menu;
 
