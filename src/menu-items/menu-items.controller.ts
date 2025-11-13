@@ -24,12 +24,12 @@ import { MenuItemService } from './menu-items.service';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 
 @ApiTags('Menu Items')
-@Controller()
+@Controller('menu-items')
 export class MenuItemController {
   constructor(private readonly menuItemService: MenuItemService) {}
 
   // ✅ Create a menu item under a specific restaurant and menu
-  @Post('restaurants/:restaurantId/menus/:menuId/menu-items')
+  @Post()
   @ApiOperation({ summary: 'Create a new menu item' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -58,7 +58,7 @@ export class MenuItemController {
   }
 
   // ✅ Get all items under a specific menu
-  @Get('restaurants/:restaurantId/menus/:menuId/menu-items')
+  @Get()
   @ApiOperation({ summary: 'Get all menu items under a specific menu' })
   getMenuItems(
     @Param('restaurantId') restaurantId: string,
@@ -68,7 +68,7 @@ export class MenuItemController {
   }
 
   // ✅ Get a single menu item by its ID
-  @Get('restaurants/:restaurantId/menus/:menuId/menu-items/:itemId')
+  @Get(':itemId')
   @ApiOperation({ summary: 'Get a single menu item by its ID' })
   @ApiParam({ name: 'itemId', description: 'UUID of the menu item' })
   getItem(
@@ -80,7 +80,7 @@ export class MenuItemController {
   }
 
   // ✅ Update a menu item
-  @Patch('restaurants/:restaurantId/menus/:menuId/menu-items/:itemId')
+  @Patch(':itemId')
   @ApiOperation({ summary: 'Update a menu item by its ID' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -108,7 +108,7 @@ export class MenuItemController {
   }
 
   // ✅ Delete a menu item
-  @Delete('restaurants/:restaurantId/menus/:menuId/menu-items/:itemId')
+  @Delete(':itemId')
   @ApiOperation({ summary: 'Delete a menu item' })
   @ApiParam({ name: 'itemId', description: 'UUID of the menu item' })
   delete(
@@ -120,14 +120,14 @@ export class MenuItemController {
   }
 
   // ✅ Get all menu items across all restaurants
-  @Get('menu-items')
+  @Get()
   @ApiOperation({ summary: 'Get all menu items across all restaurants' })
   getAllMenuItems() {
     return this.menuItemService.findAll();
   }
 
   // ✅ Get all menu items under a specific restaurant (all menus)
-  @Get('menu-items/restaurant/:restaurantId')
+  @Get('/restaurant/:restaurantId')
   @ApiOperation({ summary: 'Get all menu items for a specific restaurant' })
   @ApiParam({ name: 'restaurantId', description: 'UUID of the restaurant' })
   getMenuItemsByRestaurant(@Param('restaurantId') restaurantId: string) {
