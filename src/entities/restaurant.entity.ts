@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+// src/entities/restaurant.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Menu } from './menu.entity';
 import { MenuItem } from './menu-item.entity';
 
@@ -16,9 +17,19 @@ export class Restaurant {
   @Column({ nullable: true })
   location: string; // optionally store geo as POINT or lat/lng columns
 
+  // Cloudinary image URL (optional)
+  @Column({ nullable: true })
+  image_url?: string;
+
   @OneToMany(() => Menu, (m) => m.restaurant)
   menus: Menu[];
 
   @OneToMany(() => MenuItem, (mi) => mi.restaurant)
   menuItems: MenuItem[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
