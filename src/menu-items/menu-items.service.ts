@@ -18,20 +18,22 @@ export class MenuItemService {
     @InjectRepository(Restaurant)
     private readonly restaurantRepo: Repository<Restaurant>,
 
-    private readonly cloudinaryService: CloudinaryService, // added CloudinaryService
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  // ✅ Create a new menu item
+  // =============================
+  // CREATE MENU ITEM
+  // =============================
   async create(
     restaurantId: string,
     menuId: string,
     data: any,
     file?: Express.Multer.File,
   ) {
-    const { name, deliverySpeed, deliveryFee, price } = data;
+    const { name, price, deliverySpeed, deliveryFee, is_available } = data;
 
-    if (!name || !deliverySpeed || !deliveryFee || !price) {
-      throw new BadRequestException('Missing required fields.');
+    if (!name || price === undefined || price === null) {
+      throw new BadRequestException('Missing required fields: name or price.');
     }
 
     const restaurant = await this.restaurantRepo.findOne({ where: { id: restaurantId } });
@@ -39,27 +41,31 @@ export class MenuItemService {
 
     if (!restaurant || !menu) throw new NotFoundException('Menu or Restaurant not found.');
 
-    let imageUrl: string | null = null;
+    let imageUrl: string | undefined;
     if (file) {
-      const uploadRes = await this.cloudinaryService.upload(file.buffer, { folder: 'menu' });
+      const uploadRes = await this.cloudinaryService.upload(file.buffer, {
+        folder: 'menu',
+      });
       imageUrl = uploadRes.secure_url;
     }
 
     const newItem = this.menuItemRepo.create({
-  name,
-  deliverySpeed,
-  deliveryFee: parseFloat(deliveryFee),
-  price: parseFloat(price),
-  image: imageUrl ?? undefined, // <-- use undefined instead of null
-  restaurant,
-  menu,
-});
-
+      name,
+      price: parseFloat(price),
+      deliverySpeed: deliverySpeed ?? undefined,
+      deliveryFee: deliveryFee !== undefined ? parseFloat(deliveryFee) : 0.0,
+      is_available: is_available ?? 'active',
+      image: imageUrl,
+      restaurant,
+      menu,
+    });
 
     return await this.menuItemRepo.save(newItem);
   }
 
-  // ✅ Get all menu items (all restaurants + menus)
+  // =============================
+  // GET ALL MENU ITEMS (GLOBAL)
+  // =============================
   async findAll() {
     return this.menuItemRepo.find({
       relations: ['menu', 'restaurant'],
@@ -67,7 +73,9 @@ export class MenuItemService {
     });
   }
 
-  // ✅ Get all items for a specific menu
+  // =============================
+  // GET ITEMS FROM MENU
+  // =============================
   async findByMenu(restaurantId: string, menuId: string) {
     return this.menuItemRepo.find({
       where: {
@@ -78,42 +86,36 @@ export class MenuItemService {
     });
   }
 
-  // ✅ Get a single item
-  async findOne(restaurantId: string, menuId: string, itemId: string) {
+  // =============================
+  // GET SINGLE ITEM BY ID ONLY
+  // =============================
+  async findOne(itemId: string) {
     const item = await this.menuItemRepo.findOne({
-      where: {
-        id: itemId,
-        restaurant: { id: restaurantId },
-        menu: { id: menuId },
-      },
+      where: { id: itemId },
       relations: ['menu', 'restaurant'],
     });
 
-    if (!item) throw new NotFoundException('Menu item not found');
+    if (!item) throw new NotFoundException('Menu item not found.');
     return item;
   }
 
-  // ✅ Update a menu item
+  // =============================
+  // UPDATE MENU ITEM (BY ID)
+  // =============================
   async update(
-    restaurantId: string,
-    menuId: string,
     itemId: string,
     data: any,
     file?: Express.Multer.File,
   ) {
-    const item = await this.menuItemRepo.findOne({
-      where: {
-        id: itemId,
-        restaurant: { id: restaurantId },
-        menu: { id: menuId },
-      },
-    });
+    const item = await this.menuItemRepo.findOne({ where: { id: itemId } });
 
     if (!item) throw new NotFoundException('Menu item not found.');
 
     let imageUrl: string | null = item.image;
     if (file) {
-      const uploadRes = await this.cloudinaryService.upload(file.buffer, { folder: 'menu' });
+      const uploadRes = await this.cloudinaryService.upload(file.buffer, {
+        folder: 'menu',
+      });
       imageUrl = uploadRes.secure_url;
     }
 
@@ -128,19 +130,22 @@ export class MenuItemService {
     return await this.menuItemRepo.save(item);
   }
 
-  // ✅ Delete a menu item
-  async delete(restaurantId: string, menuId: string, itemId: string) {
-    const result = await this.menuItemRepo.delete({
-      id: itemId,
-      restaurant: { id: restaurantId },
-      menu: { id: menuId },
-    });
+  // =============================
+  // DELETE MENU ITEM (BY ID)
+  // =============================
+  async delete(itemId: string) {
+    const result = await this.menuItemRepo.delete({ id: itemId });
 
-    if (result.affected === 0) throw new NotFoundException('Menu item not found.');
+    if (result.affected === 0) {
+      throw new NotFoundException('Menu item not found.');
+    }
+
     return { message: 'Menu item deleted successfully' };
   }
 
-  // ✅ Get all items by restaurant (across all menus)
+  // =============================
+  // GET ALL ITEMS BY RESTAURANT
+  // =============================
   async findByRestaurant(restaurantId: string) {
     return this.menuItemRepo.find({
       where: { restaurant: { id: restaurantId } },

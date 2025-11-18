@@ -25,15 +25,17 @@ export class CreateMenuItemDto {
   @IsUUID()
   restaurantId: string;
 
-   @ApiProperty({ example: 'active', enum: ['active', 'inactive'], description: 'Menu availability status' })
-    @IsOptional()
-    @IsIn(['active', 'inactive'])
-    is_available?: 'active' | 'inactive';
-
   @ApiProperty({ example: 'menu-uuid', description: 'Menu UUID this item belongs to' })
   @IsUUID()
   menuId: string;
 
+
+ @ApiProperty({ example: 'active', enum: ['active', 'inactive'], description: 'Menu availability status' })
+  @IsOptional()
+  @IsIn(['active', 'inactive'])
+    is_available?: 'active' | 'inactive';
+
+ 
   @ApiProperty({
     example: 'https://cdn.example.com/images/pancake.jpg',
     description: 'Optional image URL if no file uploaded',

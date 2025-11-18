@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UsePipes,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -28,7 +29,7 @@ import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 export class MenuItemController {
   constructor(private readonly menuItemService: MenuItemService) {}
 
-  // ✅ Create a menu item under a specific restaurant and menu
+  // ✅ Create a menu item
   @Post()
   @ApiOperation({ summary: 'Create a new menu item' })
   @ApiConsumes('multipart/form-data')
@@ -37,46 +38,56 @@ export class MenuItemController {
     schema: {
       type: 'object',
       properties: {
+        restaurantId: { type: 'string', example: 'uuid-of-restaurant' },
+        menuId: { type: 'string', example: 'uuid-of-menu' },
         name: { type: 'string', example: 'Classic Pancakes' },
         price: { type: 'number', example: 7.99 },
-        description: { type: 'string', example: 'Fluffy pancakes served with syrup' },
+        deliverySpeed: { type: 'string', example: '15 mins' },
+        deliveryFee: { type: 'number', example: 0 },
         is_available: { type: 'string', example: 'active' },
         image: { type: 'string', format: 'binary' },
       },
-      required: ['name', 'price'],
+      required: ['restaurantId', 'menuId', 'name', 'price'],
     },
   })
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   create(
-    @Param('restaurantId') restaurantId: string,
-    @Param('menuId') menuId: string,
     @Body() createMenuItemDto: CreateMenuItemDto,
     @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.menuItemService.create(restaurantId, menuId, createMenuItemDto, image);
+    const { restaurantId, menuId } = createMenuItemDto;
+    return this.menuItemService.create(
+      restaurantId,
+      menuId,
+      createMenuItemDto,
+      image,
+    );
   }
 
-  // ✅ Get all items under a specific menu
+  // ✅ Fetch menu items using @Query()
+  // Example: GET /menu-items?restaurantId=xx&menuId=yy
   @Get()
-  @ApiOperation({ summary: 'Get all menu items under a specific menu' })
+  @ApiOperation({
+    summary:
+      'Get all menu items or filter by restaurantId & menuId using query params',
+  })
   getMenuItems(
-    @Param('restaurantId') restaurantId: string,
-    @Param('menuId') menuId: string,
+    @Query('restaurantId') restaurantId?: string,
+    @Query('menuId') menuId?: string,
   ) {
-    return this.menuItemService.findByMenu(restaurantId, menuId);
+    if (restaurantId && menuId) {
+      return this.menuItemService.findByMenu(restaurantId, menuId);
+    }
+    return this.menuItemService.findAll();
   }
 
-  // ✅ Get a single menu item by its ID
+  // ✅ Get a single menu item
   @Get(':itemId')
   @ApiOperation({ summary: 'Get a single menu item by its ID' })
   @ApiParam({ name: 'itemId', description: 'UUID of the menu item' })
-  getItem(
-    @Param('restaurantId') restaurantId: string,
-    @Param('menuId') menuId: string,
-    @Param('itemId') itemId: string,
-  ) {
-    return this.menuItemService.findOne(restaurantId, menuId, itemId);
+  getItem(@Param('itemId') itemId: string) {
+    return this.menuItemService.findOne(itemId);
   }
 
   // ✅ Update a menu item
@@ -88,47 +99,36 @@ export class MenuItemController {
     schema: {
       type: 'object',
       properties: {
-        name: { type: 'string', example: 'Updated Pancakes' },
-        price: { type: 'number', example: 8.99 },
-        description: { type: 'string', example: 'Updated description' },
-        is_available: { type: 'string', example: 'inactive' },
+        name: { type: 'string' },
+        price: { type: 'number' },
+        description: { type: 'string' },
+        is_available: { type: 'string' },
         image: { type: 'string', format: 'binary' },
       },
     },
   })
   @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   update(
-    @Param('restaurantId') restaurantId: string,
-    @Param('menuId') menuId: string,
     @Param('itemId') itemId: string,
     @Body() updateData: Partial<CreateMenuItemDto>,
     @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.menuItemService.update(restaurantId, menuId, itemId, updateData, image);
+    return this.menuItemService.update(itemId, updateData, image);
   }
 
   // ✅ Delete a menu item
   @Delete(':itemId')
   @ApiOperation({ summary: 'Delete a menu item' })
   @ApiParam({ name: 'itemId', description: 'UUID of the menu item' })
-  delete(
-    @Param('restaurantId') restaurantId: string,
-    @Param('menuId') menuId: string,
-    @Param('itemId') itemId: string,
-  ) {
-    return this.menuItemService.delete(restaurantId, menuId, itemId);
+  delete(@Param('itemId') itemId: string) {
+    return this.menuItemService.delete(itemId);
   }
 
-  // ✅ Get all menu items across all restaurants
-  @Get()
-  @ApiOperation({ summary: 'Get all menu items across all restaurants' })
-  getAllMenuItems() {
-    return this.menuItemService.findAll();
-  }
-
-  // ✅ Get all menu items under a specific restaurant (all menus)
+  // ✅ Get all items under a restaurant (all menus)
   @Get('/restaurant/:restaurantId')
-  @ApiOperation({ summary: 'Get all menu items for a specific restaurant' })
+  @ApiOperation({
+    summary: 'Get all menu items for a specific restaurant (all menus)',
+  })
   @ApiParam({ name: 'restaurantId', description: 'UUID of the restaurant' })
   getMenuItemsByRestaurant(@Param('restaurantId') restaurantId: string) {
     return this.menuItemService.findByRestaurant(restaurantId);
