@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Menu } from './menu.entity';
 import { Restaurant } from './restaurant.entity';
+import { Cart } from '../entities/cart.entity';
 
 @Entity('menu_items')
 export class MenuItem {
@@ -30,4 +31,8 @@ export class MenuItem {
 
   @ManyToOne(() => Restaurant, r => r.menuItems)
   restaurant: Restaurant;
+
+  // ✅ Add this OneToMany relationship
+  @OneToMany(() => Cart, cart => cart.menuItem)
+  cartItems: Cart[];
 }
