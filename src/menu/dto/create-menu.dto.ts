@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsUrl, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsUrl, IsUUID, IsIn } from 'class-validator';
 
 export class CreateMenuDto {
   @ApiProperty({ example: 'Vida Menu', description: 'Menu display name' })
@@ -11,10 +11,10 @@ export class CreateMenuDto {
   @IsString()
   promotionDetails?: string;
 
-  @ApiProperty({ example: true, description: 'Is menu available?' })
+  @ApiProperty({ example: 'active', enum: ['active', 'inactive'], description: 'Menu availability status' })
   @IsOptional()
-  @IsBoolean()
-  is_available?: boolean;
+  @IsIn(['active', 'inactive'])
+  is_available?: 'active' | 'inactive';
 
   @ApiProperty({ example: 'https://cdn.example.com/images/menu.jpg', description: 'Menu image url', required: false })
   @IsOptional()

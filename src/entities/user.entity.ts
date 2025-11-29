@@ -2,6 +2,7 @@ import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany
 } from 'typeorm';
 import { Order } from './order.entity';
+import { Cart } from './cart.entity';
 
 export enum UserRole { CUSTOMER = 'customer', ADMIN = 'admin', RECEPTIONIST = 'receptionist', CHEF = 'chef', RIDER = 'rider' }
 
@@ -31,8 +32,8 @@ export class User {
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 
-//   @OneToMany(() => Cart, (c) => c.user)
-//   carts: Cart[];
+ @OneToMany(() => Cart, (c) => c.user)
+  cart: Cart[];
 
   @CreateDateColumn()
   createdAt: Date;

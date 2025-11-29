@@ -1,21 +1,55 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query, DefaultValuePipe, ParseIntPipe, UsePipes, ValidationPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
+  UsePipes,
+  ValidationPipe,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { Menu } from '../entities/menu.entity';
+import { Express } from 'express';
 
 @ApiTags('Menus')
 @Controller('menus')
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
-  @Post()
+ @Post()
   @ApiOperation({ summary: 'Create menu' })
-  @ApiResponse({ status: 201, description: 'Menu created', type: Menu })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Create menu for resturants',
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Breakfast Menu' },
+        promotionDetails: { type: 'string', example: '20% off on pancakes' },
+        is_available: { type: 'string', example: 'active' },
+        restaurantId: { type: 'string', example: 'restaurant-uuid' },
+        image: { type: 'string', format: 'binary' },
+      },
+      required: ['name', 'restaurantId'],
+    },
+  })
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  create(@Body() createMenuDto: CreateMenuDto) {
-    return this.menuService.create(createMenuDto);
+  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
+  create(@Body() createMenuDto: CreateMenuDto, @UploadedFile() image?: Express.Multer.File) {
+    const buffer = image ? image.buffer : undefined;
+    return this.menuService.create(createMenuDto, buffer);
   }
 
   @Get()

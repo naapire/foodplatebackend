@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Menu } from './menu.entity';
 import { Restaurant } from './restaurant.entity';
+import { Cart } from '../entities/cart.entity';
 
 @Entity('menu_items')
 export class MenuItem {
@@ -22,9 +23,16 @@ export class MenuItem {
   @Column({ nullable: true })
   image: string;
 
+  @Column({ type: 'enum', enum: ['active', 'inactive'], default: 'active' })
+  is_available: 'active' | 'inactive';
+
   @ManyToOne(() => Menu, m => m.items)
   menu: Menu;
 
   @ManyToOne(() => Restaurant, r => r.menuItems)
   restaurant: Restaurant;
+
+  // ✅ Add this OneToMany relationship
+  @OneToMany(() => Cart, cart => cart.menuItem)
+  cartItems: Cart[];
 }
